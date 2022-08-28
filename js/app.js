@@ -8,6 +8,8 @@ const sintomasInput = document.querySelector("#sintomas");
 const formulario = document.querySelector("#nueva-cita");
 const contenedorCitas = document.querySelector("#citas");
 
+let editando;
+
 /********************CLASSES************************************/
 class Citas {
     constructor() {
@@ -19,6 +21,9 @@ class Citas {
     }
     eliminarCita(id){
         this.citas = this.citas.filter( cita => cita.id !== id)
+    }
+    editarCita(citaActualizada){
+        this.citas = this.citas.map(cita => cita.id === citaActualizada.id ? citaActualizada : cita)
     }
 }
 
@@ -84,10 +89,17 @@ class UI {
             const btnEliminar = document.createElement('button');
             btnEliminar.classList.add('btn', 'btn-danger', 'mr-2');
             btnEliminar.innerHTML= `Eliminar <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>`;
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>`;
+            btnEliminar.onclick = () => eliminarCita(id)
 
-          btnEliminar.onclick = () => eliminarCita(id)
+            //boton para editar una cita
+            const btnEditar = document.createElement('button');
+            btnEditar.classList.add('btn', 'btn-info')
+            btnEditar.innerHTML= `Editar <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L6.832 19.82a4.5 4.5 0 01-1.897 1.13l-2.685.8.8-2.685a4.5 4.5 0 011.13-1.897L16.863 4.487zm0 0L19.5 7.125" /></svg>`;
+            btnEditar.onclick = () => cargarEdicion(cita);
+
+
 
 
             //agrego los parrafos al divCita
@@ -98,7 +110,7 @@ class UI {
             divCita.appendChild(horaParrafo);
             divCita.appendChild(sintomasParrafo);
             divCita.appendChild(btnEliminar);
-
+            divCita.appendChild(btnEditar);
 
             //agrego divCita al html
             contenedorCitas.appendChild(divCita);
@@ -160,10 +172,22 @@ function nuevaCita(e){
         return;
     }
 
+    if(editando){
+        ui.imprimirAlerta('Editado Correctamente')
+        //pasar el obj de la cita a edicion
+        administrarCitas.editarCita({...citaObj})
+
+        //regresar el text del boton a su estado original
+        formulario.querySelector('button[type="submit"]').textContent='Crear Cita'
+        editando = false;
+    }else{
     //crear un id unico
-    citaObj.id = Date.now();
+        citaObj.id = Date.now();
     //Creando una nueva cita
-    administrarCitas.agregarCita({...citaObj});
+        administrarCitas.agregarCita({...citaObj});
+    //mensaje de agregado correctamente
+    ui.imprimirAlerta('Se agregó correctamente')
+    }
 
     //reinicio el obj y el fomrulario
     reiniciarObjeto()
@@ -195,4 +219,32 @@ function eliminarCita(id) {
     ui.imprimirAlerta("La cita fue eliminada", "error")
     //refrescar citas
     ui.imprimirCitas(administrarCitas);
+}
+
+
+//Editar cita
+function cargarEdicion(cita) {
+    const {mascota, propietario, telefono, fecha, hora, sintomas, id} = cita;
+    //llenar los inputs
+    mascotaInput.value = mascota;
+    propietarioInput.value = propietario;
+    telefonoInput.value = telefono;
+    fechaInput.value = fecha;
+    horaInput.value = hora;
+    sintomasInput.value = sintomas;
+
+    //llenar los obj
+    citaObj.mascota = mascota;
+    citaObj.propietario = propietario;
+    citaObj.telefono = telefono;
+    citaObj.fecha = fecha;
+    citaObj.hora = hora;
+    citaObj.sintomas = sintomas;
+    citaObj.id = id;
+
+
+    //cambiar el texto del boton
+    formulario.querySelector('button[type="submit"]').textContent='Guardar Cambios'
+
+    editando=true;
 }
